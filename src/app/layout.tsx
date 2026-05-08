@@ -5,7 +5,15 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'movehome.org — find your next home',
   description: 'Free, not-for-profit property listings. Powered by the RAIA Protocol.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://movehome.org')
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://movehome.org'),
+  icons: {
+    icon: [
+      { url: '/branding/favicon.ico', sizes: 'any' },
+      { url: '/branding/icon.svg', type: 'image/svg+xml' },
+      { url: '/branding/icon.png', type: 'image/png', sizes: '512x512' }
+    ],
+    apple: '/branding/apple-icon.png'
+  }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
