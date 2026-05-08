@@ -1,7 +1,8 @@
-import type { Listing, ListingTH, ListingUK } from '@/lib/types';
+import type { Listing } from '@/lib/types';
 import AgentAttribution from './AgentAttribution';
 
 function formatPrice(l: Listing): string {
+  if (!l.currency) return 'Price on application';
   const fmt = new Intl.NumberFormat('en-GB', {
     style: 'currency',
     currency: l.currency,
@@ -13,21 +14,20 @@ function formatPrice(l: Listing): string {
   return 'Price on application';
 }
 
-export default function PropertyDetail({
-  listing,
-  uk,
-  th
-}: {
-  listing: Listing;
-  uk: ListingUK | null;
-  th: ListingTH | null;
-}) {
-  const photos = listing.photos ?? [];
+export default function PropertyDetail({ listing }: { listing: Listing }) {
+  const photos = listing.photos.length > 0
+    ? listing.photos
+    : listing.photo_url
+      ? [{ url: listing.photo_url }]
+      : [];
+  const gb = listing.jurisdiction_extensions?.gb;
+  const th = listing.jurisdiction_extensions?.th;
+
   return (
     <article className="max-w-5xl mx-auto px-4 py-6">
       <header className="mb-4">
         <h1 className="text-2xl font-semibold">
-          {listing.headline ?? listing.suburb ?? listing.postcode_district}
+          {listing.headline ?? listing.suburb ?? listing.postcode_district ?? listing.raia_id}
         </h1>
         <p className="text-slate-500 mt-1 text-sm">
           {[listing.suburb, listing.postcode_district].filter(Boolean).join(', ')}
@@ -103,22 +103,35 @@ export default function PropertyDetail({
               </>
             )}
 
-            {uk?.tenure && (
+            {gb?.tenure && (
               <>
                 <dt className="text-slate-500">Tenure</dt>
-                <dd>{uk.tenure}</dd>
+                <dd>{gb.tenure.replace(/_/g, ' ')}</dd>
               </>
             )}
-            {uk?.epc_rating && (
+            {gb?.epc_rating && (
               <>
                 <dt className="text-slate-500">EPC</dt>
-                <dd>{uk.epc_rating}</dd>
+                <dd>
+                  {gb.epc_register_url ? (
+                    <a
+                      href={gb.epc_register_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline hover:text-primary"
+                    >
+                      {gb.epc_rating}
+                    </a>
+                  ) : (
+                    gb.epc_rating
+                  )}
+                </dd>
               </>
             )}
-            {uk?.council_tax_band && (
+            {gb?.council_tax_band && (
               <>
                 <dt className="text-slate-500">Council tax</dt>
-                <dd>{uk.council_tax_band}</dd>
+                <dd>{gb.council_tax_band}</dd>
               </>
             )}
 
@@ -126,7 +139,8 @@ export default function PropertyDetail({
               <>
                 <dt className="text-slate-500">BTS</dt>
                 <dd>
-                  {th.bts_station} ({th.bts_distance_m}m)
+                  {th.bts_station}
+                  {th.bts_distance_m != null && ` (${th.bts_distance_m}m)`}
                 </dd>
               </>
             )}
@@ -144,7 +158,7 @@ export default function PropertyDetail({
 
           {listing.enquiry_endpoint && (
             <a
-              href={listing.enquiry_endpoint}
+              href={`/enquire?raia_id=${encodeURIComponent(listing.raia_id)}`}
               className="mt-4 block w-full text-center bg-primary text-white rounded py-2 hover:bg-primary-dark transition-colors"
             >
               Enquire

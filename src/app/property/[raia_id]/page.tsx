@@ -10,7 +10,7 @@ export default async function PropertyPage({
   params: Promise<{ raia_id: string }>;
 }) {
   const { raia_id } = await params;
-  const { listing, uk, th } = await getListingByRaiaId(raia_id);
+  const listing = await getListingByRaiaId(raia_id);
   if (!listing) notFound();
-  return <PropertyDetail listing={listing} uk={uk} th={th} />;
+  return <PropertyDetail listing={listing} />;
 }

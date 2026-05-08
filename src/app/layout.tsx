@@ -36,6 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               >
                 Protocol
               </a>
+              <Link href="/signin" className="hover:text-primary">Sign in</Link>
             </nav>
           </div>
         </header>

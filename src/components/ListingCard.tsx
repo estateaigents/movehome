@@ -3,6 +3,7 @@ import type { Listing } from '@/lib/types';
 import AgentAttribution from './AgentAttribution';
 
 function formatPrice(l: Listing): string {
+  if (!l.currency) return 'Price on application';
   const fmt = new Intl.NumberFormat('en-GB', {
     style: 'currency',
     currency: l.currency,

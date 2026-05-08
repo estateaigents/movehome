@@ -1,4 +1,6 @@
-// Mirrors raia-protocol/schemas/listing.json v0.2 and the raia-public.tbl_listings DDL.
+// UI-facing types for MoveHome. Maps onto tbl_external_raia_listings rows
+// after unpacking media + jurisdiction_extensions JSONB blocks.
+// Aligned with RAIA Protocol v0.2 listing.json (estateaigents.org/schemas/listing.json).
 
 export type ServiceType = 'long_term' | 'short_term' | 'sale';
 
@@ -15,109 +17,108 @@ export type ListingStatus =
 
 export type Visibility = 'public' | 'pre_launch' | 'off_market';
 
+export type PropertyType = 'flat' | 'house' | 'studio' | 'commercial' | 'land' | 'other';
+
+export type Furnishing = 'furnished' | 'unfurnished' | 'part_furnished';
+
 export interface ListingPhoto {
   url: string;
-  caption: string | null;
-  order: number;
+  caption?: string;
+  order?: number;
 }
 
+// listing.json/jurisdiction_extensions/gb
+export interface JurisdictionGB {
+  tenure?: 'freehold' | 'leasehold' | 'share_of_freehold' | 'commonhold';
+  lease_years_remaining?: number;
+  service_charge_pa?: number;
+  ground_rent_pa?: number;
+  council_tax_band?: 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I';
+  epc_rating?: 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G';
+  epc_register_url?: string;
+  hmo_licence_number?: string;
+}
+
+// listing.json/jurisdiction_extensions/th
+export interface JurisdictionTH {
+  ownership_type?: 'freehold' | 'leasehold' | 'company_holding';
+  foreign_ownership_eligible?: boolean;
+  chanote_type?: string;
+  bts_station?: string;
+  bts_distance_m?: number;
+  mrt_station?: string;
+  mrt_distance_m?: number;
+}
+
+export interface JurisdictionExtensions {
+  gb?: JurisdictionGB;
+  th?: JurisdictionTH;
+}
+
+// One listing as the UI consumes it. Materialised from a tbl_external_raia_listings
+// row in src/lib/queries.ts — denormalised photo fields come from the media JSONB.
 export interface Listing {
   raia_id: string;
-  asset_id: string;
   agent_id: string;
-  agent_ref: string | null;
-  branch_id: string | null;
   agent_card_url: string | null;
+  enquiry_endpoint: string | null;
+  raia_schema_version: string | null;
 
-  un_locode: string;
-  jurisdiction: string;
+  un_locode: string | null;
+  jurisdiction: string | null;
 
   headline: string | null;
   marketing_description: string | null;
 
-  lat: number | null;
-  lon: number | null;
+  latitude: number | null;
+  longitude: number | null;
   postcode_full: string | null;
   postcode_district: string | null;
+  postcode_sector: string | null;
   street_name: string | null;
   building_number: string | null;
   suburb: string | null;
 
-  property_type: string | null;
+  property_type: PropertyType | null;
   service_type: ServiceType;
   bedrooms: number | null;
   bathrooms: number | null;
   floor_area_sqm: number | null;
   floor: number | null;
   total_floors: number | null;
-  furnishing: string | null;
-  is_new_build: boolean;
+  furnishing: Furnishing | null;
+  is_new_build: boolean | null;
   development_name: string | null;
 
   rent_pcm: number | null;
   daily_rate: number | null;
   asking_price: number | null;
-  currency: string;
-  pricing_id: string | null;
+  currency: string | null;
   available_from: string | null;
 
   listing_status: ListingStatus | null;
-  status_effective_from: string | null;
-
-  features: string[];
-
-  featured_image_url: string | null;
-  photo_url: string | null;
-  photos: ListingPhoto[] | null;
-  floor_plan_url: string | null;
-  video_url: string | null;
-  tour_360_url: string | null;
-
   visibility: Visibility;
   publish_from: string | null;
   publish_until: string | null;
 
-  enquiry_endpoint: string | null;
+  features: string[];
 
-  snapshot_version: number;
+  // Denormalised media — unpacked from the row's media JSONB.
+  featured_image_url: string | null;
+  photo_url: string | null;
+  photos: ListingPhoto[];
+  floor_plan_url: string | null;
+  video_url: string | null;
+  tour_360_url: string | null;
+
+  jurisdiction_extensions: JurisdictionExtensions | null;
+
+  listed_at: string | null;
+  first_seen_at: string;
+  last_seen_at: string | null;
+
+  snapshot_version: number | null;
   synced_at: string;
-  withdrawn_at: string | null;
-}
-
-export interface ListingUK {
-  raia_id: string;
-  tenure: string | null;
-  lease_years_remaining: number | null;
-  service_charge_pa: number | null;
-  ground_rent_pa: number | null;
-  council_tax_band: string | null;
-  epc_rating: string | null;
-  epc_register_url: string | null;
-  hmo_licence_required: boolean | null;
-  hmo_licence_number: string | null;
-  material_info_complete: boolean;
-}
-
-export interface ListingTH {
-  raia_id: string;
-  ownership_type: string | null;
-  foreign_ownership_eligible: boolean | null;
-  foreign_quota_remaining_pct: number | null;
-  chanote_type: string | null;
-  bts_station: string | null;
-  bts_distance_m: number | null;
-  mrt_station: string | null;
-  mrt_distance_m: number | null;
-}
-
-export interface ListingPortal {
-  raia_id: string;
-  portal_key: string;
-  is_enabled: boolean;
-  status: string | null;
-  portal_listing_url: string | null;
-  pushed_at: string | null;
-  last_seen_live_at: string | null;
 }
 
 export interface SearchParams {
@@ -128,7 +129,7 @@ export interface SearchParams {
   bedrooms_max?: number;
   rent_pcm_max?: number;
   asking_price_max?: number;
-  property_type?: string;
+  property_type?: PropertyType;
   features?: string[];
   limit?: number;
   offset?: number;
@@ -136,12 +137,25 @@ export interface SearchParams {
 
 export interface MapPin {
   raia_id: string;
-  lat: number;
-  lon: number;
+  latitude: number;
+  longitude: number;
   rent_pcm: number | null;
   asking_price: number | null;
   bedrooms: number | null;
   property_type: string | null;
   photo_url: string | null;
   agent_id: string;
+}
+
+// ── Agent (federated) ──────────────────────────────────────────────────────
+export interface Agent {
+  agent_id: string;
+  agent_card_url: string;
+  name: string | null;
+  display_name: string | null;
+  logo_url: string | null;
+  jurisdictions: string[] | null;
+  capabilities: string[] | null;
+  verification_status: 'pending' | 'approved' | 'rejected' | 'suspended';
+  trust_tier: 'unverified' | 'auto_verified' | 'manually_verified' | 'platform_member';
 }

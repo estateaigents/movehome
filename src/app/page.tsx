@@ -12,8 +12,8 @@ export default async function HomePage() {
     <div className="max-w-7xl mx-auto px-4 py-6">
       {!isConfigured && (
         <div className="mb-6 rounded border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Supabase isn&apos;t configured. Copy <code>.env.local.example</code> to{' '}
-          <code>.env.local</code> and fill in the <code>raia-public</code> URL + anon key.
+          Supabase isn&apos;t configured. Run <code>vercel env pull .env.local</code> from the
+          MoveHome project, or copy <code>.env.local.example</code> manually.
         </div>
       )}
 
