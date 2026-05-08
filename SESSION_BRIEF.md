@@ -63,7 +63,32 @@ We tried provisioning under Geneieux org directly on supabase.com once — that'
 
 **Once provisioned, ask the user for the project ref** (the `xxxxxxx.supabase.co` subdomain) so the next session can target it via Supabase MCP.
 
-### 📋 Phase 3 — Schema design + apply (PENDING — start here in fresh session)
+### ✅ Phase 3 — Schema design + apply (DONE 2026-05-08 evening)
+
+**Five migrations applied** to `vfnpmtqxrffppqajxxpb` via Supabase MCP, then committed to `supabase/migrations/`:
+
+```
+0001_extensions_and_helpers       — postgis (extensions schema) + set_updated_at()
+0002_raia_agent_registry          — agent directory + vw_raia_agent_registry_public
+0003_external_raia_listings       — single-table federated cache, v0.2-aligned
+0004_users_enquiries_analytics    — tbl_users + saved_searches + enquiries +
+                                    listing_views + agent_clicks
+0005_advisor_fixes                — search_path, RLS initplan, FK index
+```
+
+**Decisions taken (recorded in commit 3d93260):**
+- Migration tooling: Supabase CLI (`supabase/migrations/0001_*.sql` ordinal naming)
+- **Single-table** federated cache (no canonical tbl_listings, no UK/TH extension tables, no portals table). Jurisdiction data lives in `jurisdiction_extensions` JSONB on tbl_external_raia_listings.
+- agent_id regex `^org-[a-z]{2}-[a-z0-9-]{2,32}$` (RAIA Protocol v0.2 format, e.g. `org-gb-rlf`)
+- Whole-currency INTEGERs for rent_pcm/daily_rate/asking_price (matches v0.2)
+- Crawler hosting: GitHub Actions
+- Email digest deferred to v2 (alert_frequency column reserved)
+- Auth: magic-link only at launch — Google/Microsoft enable later via Supabase Auth dashboard, no schema changes
+- Analytics: in-DB only (tbl_listing_views + tbl_agent_clicks), no PostHog/Plausible v1
+
+**Critical context noticed during the build:** RAIA Protocol shipped **v0.2** (split into listing.json + agent-card.json + enquiry.json — replacing monolithic property.json v0.1). All MoveHome schema + app code targets v0.2. See `/root/projects/raia-protocol/schemas/`.
+
+### ✅ Phase 4 — App build (DONE 2026-05-08 evening — minus secrets/env wiring)
 
 **Project ref to target:** `vfnpmtqxrffppqajxxpb` (use as `project_id` argument to `mcp__supabase__*` tools)
 
@@ -124,7 +149,7 @@ Two choices for the migration directory layout:
 3. Apply via Supabase MCP `mcp__supabase__apply_migration` to the new project ref
 4. Verify with MCP `list_tables` + `get_advisors`
 
-### 🏗️ Phase 4 — App build (PENDING — main session work)
+### Phase 4 details (historical — what was built 2026-05-08 evening)
 
 #### What's already scaffolded in `src/`
 
