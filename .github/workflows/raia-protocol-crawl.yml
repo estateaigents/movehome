@@ -1,0 +1,82 @@
+name: RAIA Protocol federated crawl
+
+# Crawls every approved agent in tbl_raia_agent_registry, fetches their agent
+# card + listings, normalises and UPSERTs into tbl_external_raia_listings.
+#
+# Schedule:
+#   - Every 4 hours: standard crawl (only stale agents).
+#   - Daily 02:00 UTC: --validate-cards re-fetches every approved agent's
+#     card so we catch unreachable/abandoned agents.
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'  # every 4h
+    - cron: '0 2 * * *'    # daily 02:00 UTC — validate cards
+  workflow_dispatch:
+    inputs:
+      agent_id:
+        description: 'Single agent_id (optional)'
+        default: ''
+        required: false
+      force:
+        description: 'Ignore freshness window (true/false)'
+        default: 'false'
+        required: false
+      validate_cards:
+        description: 'Re-fetch all cards even if no listings (true/false)'
+        default: 'false'
+        required: false
+      dry_run:
+        description: 'Dry run (true/false)'
+        default: 'false'
+        required: false
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install --omit=dev --ignore-scripts
+
+      - name: Run RAIA Protocol crawl
+        env:
+          NEXT_PUBLIC_SUPABASE_URL:  ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GITHUB_RUN_ID:             ${{ github.run_id }}
+        run: |
+          ARGS=""
+
+          # On the daily 02:00 UTC schedule, run with --validate-cards.
+          if [ "${{ github.event.schedule }}" = "0 2 * * *" ]; then
+            ARGS="$ARGS --validate-cards"
+          fi
+
+          # workflow_dispatch overrides
+          if [ "${{ github.event.inputs.validate_cards }}" = "true" ]; then
+            ARGS="$ARGS --validate-cards"
+          fi
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            ARGS="$ARGS --force"
+          fi
+          if [ "${{ github.event.inputs.agent_id }}" != "" ]; then
+            ARGS="$ARGS --agent-id ${{ github.event.inputs.agent_id }}"
+          fi
+
+          # Default to write mode unless explicitly dry-run
+          if [ "${{ github.event.inputs.dry_run }}" != "true" ]; then
+            ARGS="$ARGS --write"
+          fi
+
+          ARGS="$ARGS --verbose"
+
+          echo "Running: node scripts/raia-protocol-crawl.cjs $ARGS"
+          node scripts/raia-protocol-crawl.cjs $ARGS
