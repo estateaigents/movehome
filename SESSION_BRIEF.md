@@ -31,7 +31,22 @@ Think of it as the consumer side of the RAIA Protocol:
 - Local `npm run build` succeeds; Vercel should auto-redeploy on the push
 - **Verify:** check https://vercel.com/move-home/move-home-org for green deployment
 
-### ⏸ Phase 2 — Provision Supabase via Vercel Marketplace (PENDING — user must do in dashboard)
+### ✅ Phase 2 — Supabase provisioned via Vercel Marketplace (DONE 2026-05-08)
+
+**New project:**
+- **Ref:** `vfnpmtqxrffppqajxxpb`
+- **URL:** `https://vfnpmtqxrffppqajxxpb.supabase.co`
+- **Org:** `MoveHome` (slug `vercel_icfg_HM1AzIKzSa3aihb2y7BvK5uy`)
+- **Region:** eu-west-2 (London)
+- **Compute:** t4g.nano, Free plan
+- **Postgres:** 17.6.1.121
+- **Status:** ACTIVE_HEALTHY
+
+Env vars auto-injected by Vercel into MoveHome project (Production + Preview + Development): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_ANON_KEY`, `SUPABASE_PUBLISHABLE_KEY`, `POSTGRES_URL`, `POSTGRES_PRISMA_URL`, `POSTGRES_URL_NON_POOLING`, `POSTGRES_HOST`, `POSTGRES_DATABASE`, `POSTGRES_PASSWORD`. Pull locally with `vercel env pull .env.local`.
+
+**Reachable via Supabase MCP:** all `mcp__supabase__*` tools accept `project_id="vfnpmtqxrffppqajxxpb"`. Schema is empty (no migrations, no backups, no GitHub repo connected at the Supabase level — that's fine).
+
+### ⏸ Phase 2 — Provision Supabase via Vercel Marketplace (HISTORICAL INSTRUCTIONS, KEPT FOR REFERENCE)
 
 **Why via Vercel and not directly in Supabase:**
 We tried provisioning under Geneieux org directly on supabase.com once — that's how `raia-public` was created. For MoveHome we want the **Vercel Marketplace integration** so:
@@ -49,6 +64,8 @@ We tried provisioning under Geneieux org directly on supabase.com once — that'
 **Once provisioned, ask the user for the project ref** (the `xxxxxxx.supabase.co` subdomain) so the next session can target it via Supabase MCP.
 
 ### 📋 Phase 3 — Schema design + apply (PENDING — start here in fresh session)
+
+**Project ref to target:** `vfnpmtqxrffppqajxxpb` (use as `project_id` argument to `mcp__supabase__*` tools)
 
 #### Decision already made: mirror raia-public + add MoveHome extensions
 
